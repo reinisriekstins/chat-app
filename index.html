@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>chat-app</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body {
+      margin-top: 30px;
+    }
+    #messageArea {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="row" id="userFormArea">
+    <div class="col-md-12">
+      <form action="" id="userForm">
+        <div class="form-group">
+          <label for="username">Enter Username</label>
+          <input type="text" class="form-control" id="username">
+          <br>
+          <input type="submit" class="btn btn-primary" value="Login">
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row" id="messageArea">
+    <div class="col-md-4">
+      <div class="well">
+        <h3>Online Users</h3>
+        <ul id="users" class="list-group"></ul>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="chat" id="chat">
+
+      </div>
+      <form action="" id="messageForm">
+        <div class="form-group">
+          <label for="">Enter a message:</label>
+          <textarea name="" id="message" cols="30" rows="10" class="form-control" placeholder="your message"></textarea>
+          <br>
+          <input type="submit" class="btn btn-primary" value="Send Message">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(() => {
+    let socket = io.connect()
+
+    let
+      $messageForm = $('#messageForm'),
+      $message = $('#message'),
+      $messageArea = $('#messageArea'),
+      $chat = $('#chat'),
+      $userForm = $('#userForm'),
+      $userFormArea = $('#userFormArea'),
+      $users = $('#users'),
+      $username = $('#username')
+
+    $messageForm.submit((e) => {
+      e.preventDefault()
+      socket.emit('send message', $message.val())
+
+      $message.val('')
+    })
+
+    socket.on('new message', ({ msg, user }) => {
+      $chat.append(`<div className="well"><strong>${ user }:</strong>${ msg }</div>`)
+    })
+
+    $userForm.submit((e) => {
+      e.preventDefault()
+      socket.emit('new user', $username.val(), (data) => {
+        if (data) {
+          $userFormArea.hide()
+          $messageArea.show()
+        }
+      })
+
+      $username.val('')
+    })
+
+    socket.on('get users', (data) => {
+      let html = ''
+
+      data.forEach(item => {
+        html += `<li class=" list-group-item">${ item }</li>`
+      })
+
+      $users.html(html)
+    })
+  })
+</script>
+
+</body>
+</html>
